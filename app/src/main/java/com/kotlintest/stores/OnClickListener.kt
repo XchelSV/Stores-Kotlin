@@ -1,5 +1,7 @@
 package com.kotlintest.stores
 
 interface OnClickListener {
-    fun onClick(store: Store)
+    fun onClick(storeId: Long)
+    fun onFavoriteStore(storeEntity: StoreEntity)
+    fun onDeleteStore(storeEntity: StoreEntity)
 }

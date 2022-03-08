@@ -5,9 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.kotlintest.stores.databinding.ItemStroeBinding
 
-class StoreAdapter(private var stores: MutableList<Store>, private var listener: OnClickListener):
+class StoreAdapter(private var stores: MutableList<StoreEntity>, private var listener: OnClickListener):
     RecyclerView.Adapter<StoreAdapter.ViewHolder>() {
 
     private lateinit var mContext: Context
@@ -23,20 +25,57 @@ class StoreAdapter(private var stores: MutableList<Store>, private var listener:
         with(holder) {
             setListener(store)
             binding.tvName.text = store.name
+            binding.cbFavorite.isChecked = store.isFavorite
+            Glide.with(mContext)
+                .load(store.photoUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .centerCrop()
+                .into(binding.imgPhoto)
         }
     }
 
     override fun getItemCount(): Int = stores.size
 
-    fun add(store: Store) {
-        stores.add(store)
+    fun add(storeEntity: StoreEntity) {
+        if (!stores.contains(storeEntity)) {
+            stores.add(storeEntity)
+            notifyItemInserted(stores.size - 1)
+        }
+    }
+
+    fun setStores(stores: MutableList<StoreEntity>) {
+        this.stores = stores
         notifyDataSetChanged()
+    }
+
+    fun update(storeEntity: StoreEntity) {
+        val index = stores.indexOf(storeEntity)
+        if (index != -1) {
+            stores.set(index, storeEntity)
+            notifyItemChanged(index)
+        }
+    }
+
+    fun delete(storeEntity: StoreEntity) {
+        val index = stores.indexOf(storeEntity)
+        if (index != -1) {
+            stores.removeAt(index)
+            notifyItemRemoved(index)
+        }
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view){
         val binding =  ItemStroeBinding.bind(view)
-        fun setListener(store: Store) {
-            binding.root.setOnClickListener { listener.onClick(store) }
+        fun setListener(storeEntity: StoreEntity) {
+            with(binding.root) {
+                setOnClickListener { listener.onClick(storeEntity.id) }
+                setOnLongClickListener {
+                    listener.onDeleteStore(storeEntity)
+                    true
+                }
+            }
+            binding.cbFavorite.setOnClickListener { listener.onFavoriteStore(storeEntity) }
+
         }
     }
 }
